@@ -68,6 +68,10 @@ describe Result do
     ok12 = Result::Ok(Int32, String).new(12)
     ok12.unwrap.should eq 12
 
+    (Result::Err(Int32,String).new("zzz")).get_or_else("aaa").should eq "aaa"
+    (Result::Err(Int32,String).new("zzz")).to_option.is_a?(Option::None).should eq true
+    (Result::Ok(Int32,String).new(1)).to_option.is_a?(Option::Some).should eq true
+
     none = Result::Err(Int32, String).new "Err"
     applied = none.ap(okF)
     applied.has_value.should eq false
