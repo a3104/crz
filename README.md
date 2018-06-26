@@ -6,6 +6,9 @@ CRZ is a functional programming library for the Crystal language.
   - Option
   - Nilable
   - Result
+  - Try
+  - (Future)
+  
 * Algebraic data types (using macros).
 * Haskell like do notation (more macro goodness).
 * Macros for Applicative types.
