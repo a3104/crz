@@ -1,6 +1,9 @@
 require "./*"
 include CRZ
 
+class TimeoutException < Exception
+end
+
 module CRZ::Containers
   adt_class Future(A), Success(A), Processing(A), Failure,
     abstract class ADTFuture(A)
@@ -17,9 +20,19 @@ module CRZ::Containers
       # Set dummy to an instance of type A.
       # The value can be anything. It needs to be set in order to pass through the compiler.
       # If anyone has a good idea please let me know.
-      def self.spawn(dummy : A, &block : -> A) : Future(A) forall A
+      def self.spawn(dummy : A, timeout = 0, &block : -> A) : Future(A) forall A
         c = Channel(Int32 | Exception).new
         f = Future::Processing(A).new(dummy)
+        if timeout > 0
+          spawn do
+            sleep(timeout)
+            f.error = TimeoutException.new
+            f.is_error = true
+            f.is_completed = true
+            c.close
+          end
+        end
+
         f.channel = c
         s = spawn do
           begin

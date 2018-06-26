@@ -63,6 +63,8 @@ describe "Future" do
 
   it "works as a monad2" do
     (Future.spawn(0) { 1 }.bind { |x| Future.spawn(0) { x + 1 } }).unwrap.should eq 2
+    (Future.spawn(0) { 1 }.bind { |x| Future.spawn(0) { x + 1 } }).map { |x| x*2 }.unwrap.should eq 4
+    (Future.spawn(0, 2) { sleep 5; 1 }.bind { |x| Future.spawn(0) { x + 1 } }).map { |x| x*2 }.get_or_else(0).should eq 0
 
     mdo({
       x <= Future.spawn(0) { 1 },
