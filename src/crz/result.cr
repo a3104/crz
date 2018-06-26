@@ -47,15 +47,15 @@ module CRZ::Containers
         }
       end
 
-      def get_or_else(default )
+      def get_or_else(default)
         unwrap_or(default)
       end
 
       def to_option
         Result.match self, Result(T, E), {
-                  [Ok, x]  => Option::Some.of(x),
-                  [Err, e] => Option::None(T).new,
-                }
+          [Ok, x]  => Option::Some.of(x),
+          [Err, e] => Option::None(T).new,
+        }
       end
 
       def has_value : Bool

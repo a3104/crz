@@ -40,13 +40,13 @@ describe Result do
     end
     Result.match mapped, Result(Int32, String), {
       [Ok, x] => (x.should eq 35),
-      [_]       => (1.should eq 2),
+      [_]     => (1.should eq 2),
     }
 
     string_result = mapped.map &.to_s
     Result.match string_result, Result(String, String), {
       [Ok, x] => (x.should eq "35"),
-      [_]       => (1.should eq 2),
+      [_]     => (1.should eq 2),
     }
 
     err = Result::Err(Int32, String).new "Error"
@@ -56,8 +56,8 @@ describe Result do
     end
 
     Result.match mapped, Result(Int32, String), {
-      [Ok, x] => (1.should eq 2),
-      [Err, e]    => (e.should eq "Error"),
+      [Ok, x]  => (1.should eq 2),
+      [Err, e] => (e.should eq "Error"),
     }
   end
 
@@ -68,9 +68,9 @@ describe Result do
     ok12 = Result::Ok(Int32, String).new(12)
     ok12.unwrap.should eq 12
 
-    (Result::Err(Int32,String).new("zzz")).get_or_else("aaa").should eq "aaa"
-    (Result::Err(Int32,String).new("zzz")).to_option.is_a?(Option::None).should eq true
-    (Result::Ok(Int32,String).new(1)).to_option.is_a?(Option::Some).should eq true
+    (Result::Err(Int32, String).new("zzz")).get_or_else("aaa").should eq "aaa"
+    (Result::Err(Int32, String).new("zzz")).to_option.is_a?(Option::None).should eq true
+    (Result::Ok(Int32, String).new(1)).to_option.is_a?(Option::Some).should eq true
 
     none = Result::Err(Int32, String).new "Err"
     applied = none.ap(okF)

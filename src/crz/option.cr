@@ -32,8 +32,8 @@ module CRZ::Containers
 
       def unwrap_or_else(default : A) : A
         Option.match self, Option(A), {
-            [Some, x] => x,
-            [None]    => default
+          [Some, x] => x,
+          [None]    => default,
         }
       end
 

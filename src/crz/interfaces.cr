@@ -50,7 +50,7 @@ module CRZ
 
     def <<(other : Monad(B)) : Monad(A) forall B
       bind { |v|
-        other.map {|_|
+        other.map { |_|
           v
         }
       }
