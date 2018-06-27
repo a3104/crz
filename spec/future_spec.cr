@@ -27,6 +27,10 @@ describe "Future" do
     (o.responds_to? :*).should eq true
   end
 
+  it "test of get_result_with_err" do
+    Future.spawn(0) { 1/0 }.get_result_with_err("error").unwrap_error.should eq "error"
+  end
+
   it "implements of method" do
     o = Future.of(2)
     typeof(o).should eq Future::Success(Int32)

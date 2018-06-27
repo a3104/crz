@@ -109,6 +109,10 @@ module CRZ::Containers
         self.is_a?(Future::Success) ? Result::Ok(A, Excception).new(self.value0) : Result::Err(A, Exception).new(self.error)
       end
 
+      def get_result_with_err(error)
+        self.is_a?(Future::Success) ? Result::Ok(A, typeof(error)).new(self.value0) : Result::Err(A, typeof(error)).new(error)
+      end
+
       def has_value
         self.is_a?(Future::Success) ? true : false
       end
