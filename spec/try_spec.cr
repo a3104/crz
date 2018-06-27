@@ -96,6 +96,11 @@ describe "Try" do
     }).unwrap.should eq 13
   end
 
+  it "test of to_result" do
+    Try.try { 1 }.to_result_with_err("aaa").is_a?(Result::Ok).should eq true
+    Try.try { 1 }.to_result_with_err("aaa").unwrap.should eq 1
+    Try.try { 1/0 }.to_result_with_err("aaa").unwrap_or_error.should eq "aaa"
+  end
   it "works as a monad" do
     (Try.of(1).bind { |x| Try.of(x + 1) }).unwrap.should eq 2
     (Try::Failure(Int32).new.bind { |x| Try.of(x + 1) }).has_value.should eq false

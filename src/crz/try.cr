@@ -68,5 +68,9 @@ module CRZ::Containers
       def get_result
         self.is_a?(Try::Success) ? Result::Ok(A, Excception).new(self.value0) : Result::Err(A, Exception).new(self.error)
       end
+
+      def to_result_with_err(error)
+        self.is_a?(Try::Success) ? Result::Ok(A, typeof(error)).new(self.value0) : Result::Err(A, typeof(error)).new(error)
+      end
     end
 end
