@@ -98,23 +98,33 @@ module CRZ::Containers
       end
 
       def get_or_else(default : A) : A
-        self.is_a?(Future::Success) ? self.value0 : default
+        bind { |x| Future::Success.new(0) }
+        p self
+        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? self.value0 : default
       end
 
       def get_option : Option(A)
-        self.is_a?(Future::Success) ? Option::Some(A).new(self.value0) : Option::None(A).new
+        bind { |x| Future::Success.new(0) }
+
+        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? self.value0 : default
       end
 
       def get_result
-        self.is_a?(Future::Success) ? Result::Ok(A, Excception).new(self.value0) : Result::Err(A, Exception).new(self.error)
+        bind { |x| Future::Success.new(0) }
+
+        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? Result::Ok(A, Excception).new(self.value0) : Result::Err(A, Exception).new(self.error)
       end
 
       def get_result_with_err(error)
-        self.is_a?(Future::Success) ? Result::Ok(A, typeof(error)).new(self.value0) : Result::Err(A, typeof(error)).new(error)
+        bind { |x| Future::Success.new(0) }
+
+        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? Result::Ok(A, typeof(error)).new(self.value0) : Result::Err(A, typeof(error)).new(error)
       end
 
       def has_value
-        self.is_a?(Future::Success) ? true : false
+        bind { |x| Future::Success.new(0) }
+
+        self.is_a?(Future::Failure) == false && is_error == false ? true : false
       end
     end
 end
