@@ -32,6 +32,10 @@ describe Result do
     typeof(o).should eq Result::Ok(Int32, String)
   end
 
+  it "test of unwrap_error" do
+    Result::Err(Int32, String).new("aaaa").unwrap_error.should eq "aaaa"
+  end
+
   it "works as a functor" do
     ok = Result::Ok(Int32, String).new 34
     mapped = ok.map do |x|

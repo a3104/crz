@@ -32,6 +32,21 @@ module CRZ::Containers
         }
       end
 
+      def unwrap_error : E
+        Result.match self, Result(T, E), {
+          [Err, e] => e,
+          [Ok, x]  => raise Exception.new("Tried to unwrap_error Result::Ok value"),
+
+        }
+      end
+
+      def unwrap_or_error
+        Result.match self, Result(T, E), {
+          [Ok, x]  => x,
+          [Err, e] => e,
+        }
+      end
+
       def flatten : T
         unwrap
       end
