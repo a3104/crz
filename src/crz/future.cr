@@ -106,7 +106,7 @@ module CRZ::Containers
       def get_option : Option(A)
         bind { |x| Future::Success.new(0) }
 
-        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? self.value0 : default
+        (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? Option::Some.new(self.value0) : Option::None(A).new
       end
 
       def get_result
