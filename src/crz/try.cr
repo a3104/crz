@@ -21,6 +21,20 @@ module CRZ::Containers
         Try::Success(A).new(value)
       end
 
+      def map(&block : A -> U) : Try(U) forall U
+        if self.is_a?(Try::Failure)
+          self
+        else
+          begin
+            Try.of(block.call(self.value0))
+          rescue e
+            error = Try::Failure(U).new
+            error.error = e
+            error
+          end
+        end
+      end
+
       def flat_map(&block : A -> Try(B)) : Try(B) forall B
         bind(block)
       end
