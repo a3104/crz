@@ -31,6 +31,10 @@ describe "Future" do
     Future.spawn(0) { 1/0 }.get_result_with_err("error").unwrap_error.should eq "error"
   end
 
+  it "test of map_future" do
+    Future.spawn(0) { sleep 2; 10 }.map_future(0) { |x| x*2 }.get_or_else(0).should eq 20
+  end
+
   it "implements of method" do
     o = Future.of(2)
     typeof(o).should eq Future::Success(Int32)
@@ -66,6 +70,10 @@ describe "Future" do
   end
 
   it "works as a monad2" do
+    Future.spawn(0) { 1/0 }.map { |x| x + 1 }
+    Future.spawn(0) { 1/0 }.map { |x| x + 1 }.is_a?(Future::Failure).should eq true
+    Future.spawn(0) { 1 }.map { |x| x/0 }.is_a?(Future::Failure).should eq true
+
     (Future.spawn(0) { 1 }.bind { |x| Future.spawn(0) { x + 1 } }).unwrap.should eq 2
     (Future.spawn(0) { 1 }.bind { |x| Future.spawn(0) { x + 1 } }).map { |x| x*2 }.unwrap.should eq 4
     (Future.spawn(0, 2) { sleep 5; 1 }.bind { |x| Future.spawn(0) { x + 1 } }).map { |x| x*2 }.get_or_else(0).should eq 0

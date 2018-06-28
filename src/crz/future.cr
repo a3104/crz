@@ -66,7 +66,7 @@ module CRZ::Containers
           channel.receive if is_completed == false && self.is_a?(Future::Processing)
         rescue e
           @error = e
-          is_error = true
+          @is_error = true
         end
 
         if self.is_a?(Future::Processing)
@@ -75,6 +75,48 @@ module CRZ::Containers
           @is_error == false ? block.call(self.value0) : (f = Future::Failure(A).new; f.error = @error; f)
         else
           self
+        end
+      end
+
+      def map(&block : A -> U) : Future(U) forall U
+        me = bind { |x| Future.of(x) }
+
+        if me.is_error
+          me
+        elsif me.is_a?(Future::Failure)
+          me
+        else
+          begin
+            block.call(me.value0)
+            Future.of(block.call(me.value0))
+          rescue e
+            f = Future::Failure(U).new
+            f.error = e
+            f.is_completed = true
+            f
+          end
+        end
+      end
+
+      def map_future(default : U, &block : A -> U) : Future(U) forall U
+        if self.is_a?(Future::Failure) || @is_error
+          self
+        elsif @is_completed
+          me = self.bind { |x| Future.of(x) }
+          if self.is_a?(Future::Success) && me.is_error == false
+            begin
+              block.call(self.value0)
+            rescue
+              Future::Failure(U).new
+            end
+          else
+            Future::Failure(U).new
+          end
+        else
+          Future.spawn(default) {
+            me = bind { |x| Future.of(x) }
+            block.call(self.value0)
+          }
         end
       end
 
@@ -99,7 +141,7 @@ module CRZ::Containers
 
       def get_or_else(default : A) : A
         bind { |x| Future::Success.new(0) }
-        p self
+
         (self.is_a?(Future::Success) || self.is_a?(Future::Processing) && self.is_error == false) ? self.value0 : default
       end
 
