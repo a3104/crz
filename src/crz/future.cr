@@ -58,7 +58,7 @@ module CRZ::Containers
       end
 
       def flat_map(&block : A -> Future(B)) : Future(B) forall B
-        bind(block)
+        bind(&block)
       end
 
       def bind(&block : A -> Future(B)) : Future(B) forall B
