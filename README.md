@@ -1,18 +1,28 @@
-# CRZ [![Build Status](https://travis-ci.org/dhruvrajvanshi/crz.svg?branch=master)](https://travis-ci.org/dhruvrajvanshi/crz)
+# CRZ [![Build Status](https://travis-ci.org/a3104/crz.svg?branch=master)](https://travis-ci.org/a3104/crz)
+
+
 CRZ is a functional programming library for the Crystal language.
+
+This is forked repository. 
+The original repository is 
+https://github.com/dhruvrajvanshi/crz
+
+
 
 ## Features
 * Common monads
   - Option
   - Nilable
-  - Result
-  - Try
-  - (Future)
+  - *Result*
+  - *Try*
+  - *(Future : beta quority)*
   
 * Algebraic data types (using macros).
 * Haskell like do notation (more macro goodness).
 * Macros for Applicative types.
 * Pattern matching
+* *Interconversion to each monad.*
+
 
 ## Goals
 * Make working with monads/applicatives/functors as pleasant as possible (using macros if needed).
