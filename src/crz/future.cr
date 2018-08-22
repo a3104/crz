@@ -87,8 +87,12 @@ module CRZ::Containers
           me
         else
           begin
-            block.call(me.value0)
-            Future.of(block.call(me.value0))
+            if me.is_a?(Future::Success) || me.is_a?(Future::Processing)
+              block.call(me.value0)
+              Future.of(block.call(me.value0))
+            else
+              me
+            end
           rescue e
             f = Future::Failure(U).new
             f.error = e
