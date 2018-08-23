@@ -26,7 +26,11 @@ module CRZ::Containers
           self
         else
           begin
-            Try.of(block.call(self.value0))
+	    if self.is_a?(Try::Success)
+              Try.of(block.call(self.value0))
+	    else
+	      self
+            end
           rescue e
             error = Try::Failure(U).new
             error.error = e
