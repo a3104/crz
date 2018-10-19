@@ -42,13 +42,13 @@ describe Result do
       x.should eq 34
       x + 1
     end
-    Result.match mapped, Result(Int32, String), {
+    Result.match mapped, {
       [Ok, x] => (x.should eq 35),
       [_]     => (1.should eq 2),
     }
 
     string_result = mapped.map &.to_s
-    Result.match string_result, Result(String, String), {
+    Result.match string_result, {
       [Ok, x] => (x.should eq "35"),
       [_]     => (1.should eq 2),
     }
@@ -59,7 +59,7 @@ describe Result do
       x + 3
     end
 
-    Result.match mapped, Result(Int32, String), {
+    Result.match mapped, {
       [Ok, x]  => (1.should eq 2),
       [Err, e] => (e.should eq "Error"),
     }
