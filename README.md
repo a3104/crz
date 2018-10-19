@@ -18,6 +18,7 @@ https://github.com/dhruvrajvanshi/crz
   - *(Future : beta quority)*
   
 * Algebraic data types (using macros).
+* Automatic generation of `==` and `copy_with` methods like builtin `records` macro.
 * Haskell like do notation (more macro goodness).
 * Macros for Applicative types.
 * Pattern matching
@@ -30,12 +31,37 @@ https://github.com/dhruvrajvanshi/crz
 * Emulate algebraic data types using macros.
 * Make working with algebraic types type safe and easy using pattern matching.
 
+## Changelog
+### 1.0.0
+Breaking changes:
+- `==` method is now overridden for adt variants meaning that it will now use value equality instead of reference equality. i.e.
+  `Option::Success.new(1) == Option::Success.new(1)` will always be true.
+- `adt_class` macro has been removed. Instead, you
+  can simply pass a block containing your custom methods to the `adt` macro.
+- `match` macro doesn't need an explicit type argument. It won't work
+  with the argument anymore.
 
 ## Quickstart
+Add this to your shard.yml
+```yaml
+crz:
+  git: dhruvrajvanshi/crz
+  version: ~> 1.0.0
+```
+
+Then run `shard install` in your project directory.
+
 ```crystal
 include CRZ
 ```
 ### Algebraic data types
+Algebraic data types are a lightweight way of defining data types
+that can be one of multiple sub types, each having its own data values.
+Think of them as a single abstract base class with multiple subclasses.
+
+CRZ provides macros for creating algebraic types with overloaded equality (`==`)
+and `to_s` (TODO) methods.
+
 Define basic algebraic type using adt
 ```
 ## A list type for integers
@@ -57,6 +83,25 @@ listWith0And1 = IntList::Cons.new 0, (IntList::Cons.new 1, IntList::Empty.new)
 listWith0And1 = IntList::Cons.new 0, listWithJust1
 ```
 
+#### Named fields
+```crystal
+adt Point,
+  Named { x : Int32, y : Int32 },
+    # property x : Int
+    # property y : Int
+
+  PartiallyNamed { x: Int32, Int32 },
+    # property x : Int32
+    # property value1 : Int32
+
+  Unnamed { Int32, Int32 }
+    # property value0 : Int32
+    # property value1 : Int32
+```
+
+In case no name is provided, the name of the property will be
+`@valueN`, where `N` is the index of the field for that constructor
+
 #### Accesing values of ADT variants
 Each ADT variant (subtype) has instance variables @value0, @value1,
 etc according to their index in the data type.
@@ -65,11 +110,30 @@ head = listWith0And1.value0
 ```
 This method is there but does not utilize the full power of CRZ ADTs.
 
+#### Cloning and copying
+Each variant has a `clone` method that makes a copy of that object.
+
+`copy_with` method is like clone but fields can be updated individually.
+
+```crystal
+adt Point, P {x : Int32, y : Int32}
+
+Point::P.new(1, 2).copy_with(3, 4) # => Point::P(3, 4)
+
+# Or using field label
+Point::P.new(1, 2).copy_with(y: 3) # => Point::P(1, 3)
+
+```
+If you don't pass a field to `copy_with`, the one from the current
+object is used as a default value. i.e. `copy_with` without any arguments
+works like `clone`.
+
+
 #### Pattern matching
 All user defined ADTs allow getting values from them using pattern matching. You can write cases corresponding to each variant in the data type and conditionally perform actions.
 Example
 ```crystal
-head = IntList.match listWithJust1, IntList, {
+head = IntList.match listWithJust1, {
   [Cons, x, xs] => x,
   [Empty] => nil
 }
@@ -77,19 +141,17 @@ puts head # => 1
 ```
 Notice the comma after the variant name (Cons,). This is required.
 
-Also note that the second argument to .match is the type of the value you're matching over. This is necessary because for generic ADTs, the match macro needs the concrete type of the generic arguments. Otherwise, the binding of generic values in matching can't be done.
-
 You can use [_] pattern as a catch all pattern.
 
 ```crystal
-head = IntList.match empty, IntList, {
+head = IntList.match empty, {
   [Cons, x, xs] => x,
   [_] => nil
 }
 ```
 Note that ordering of patterns matters. For example,
 ```crystal
-IntList.match list, IntList, {
+IntList.match list, {
   [_] => nil,
   [Cons, x, xs] => x,
   [Empty] => 0
@@ -100,7 +162,7 @@ This will always return nil because ```[_]``` matches everything.
 
 You can also use constants in patterns. For example
 ```crystal
-has0AsHead = IntList.match list, IntList, {
+has0AsHead = IntList.match list, {
   [Cons, 0, _] => true,
   [_] => false
 }
@@ -108,7 +170,7 @@ has0AsHead = IntList.match list, IntList, {
 
 You can write statements inside match branches ising Proc literals.
 ```crystal
-IntList.match list, IntList, {
+IntList.match list, {
   [Empty] => ->{
     print "here"
     ...
@@ -116,6 +178,26 @@ IntList.match list, IntList, {
 }
 ```
 You have to add .call at the end of the proc otherwise, it will be returned as a value instead of being called.
+
+For values with named fields, using a `case` expression is somewhat cleaner.
+
+```crystal
+adt X,
+  A { a : Int32 },
+  B { b : String }
+
+x = X::A.new a: 1
+...
+
+case x
+when X::A
+  # type of x will be narrowed to X::A at compile time
+  x.a
+else
+  # Inferred as X::B
+  x.b
+end
+```
 
 #### Generic ADTs
 You can also declare a generic ADTs.
@@ -127,31 +209,31 @@ adt List(A),
 
 empty = List::Empty(Int32).new # Type annotation is required for empty
 cons  = List::Cons.new 1, empty # type annotation isn't required because it is inferred from the first argument
-head = List.match cons, List(Int32), { # Just List won't work here, it has to be concrete type List(Int32)
+head = List.match cons, {
   [Cons, x, _] => x,
   [_] => nil
 }
 ```
 
-#### ADT Classes
-You may need to add methods to your ADTs. This can be done using `adt_class` macro which is similar to `adt` but has a class declaration as it's last argument.
+#### Adding custom methods
+You may need to add methods to your ADTs. This can be done by passing a block to the `adt` macro.
 For example, here's a partial implementation of `CRZ::Containers::Option` with a few members excluded for brevity.
 ```crystal
-adt_class Option(A),
+adt Option(A),
     Some(A),
     None,
-    abstract class ADTOption(A)
+    do
       include Monad(A)
 
       def to_s
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => "Some(#{x})",
           [None]    => "None",
         }
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => (block.call x),
           [None]    => None(B).new,
         }
@@ -181,7 +263,7 @@ a = Some.new 2
 b = None(Int32).new
 
 # pattern matching over Option
-Option.match a, Option(Int32), {
+Option.match a, {
   [Some, x] => "Some(#{x})",
   [_] => "None"
 } # ==> Some(1)
@@ -275,8 +357,8 @@ c = mdo({
 ```
 You'd have to write this
 ```crystal
-Option.match a, Option(Int32), {
-  [Some, x] => Option.match b, Option(Int32), {
+Option.match a, {
+  [Some, x] => Option.match b, {
     [Some, y] => Some.new(x+y),
     [None] => None(Int32).new
   },
@@ -348,10 +430,10 @@ the .of, bind and map methods (you can omit the map method if
 your monad takes only one generic type argument). of method
 is a static method, so, it is named self.of.
 For example, Option type is defined as
+
 ```crystal
-adt_class Option(A),
-    Some(A), None,
-    abstract class ADTOption(A)
+adt Option(A),
+    Some(A), None, do
       include Monad(A)
 
       def self.of(value : T) : Option(T) forall T
@@ -359,7 +441,7 @@ adt_class Option(A),
       end
 
       def bind(&block : A -> Option(B)) : Option(B) forall B
-        Option.match self, Option(A), {
+        Option.match self, {
           [Some, x] => (block.call x),
           [None]    => Option::None(B).new,
         }
