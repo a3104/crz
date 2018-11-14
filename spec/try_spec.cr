@@ -38,6 +38,7 @@ describe "Try" do
       x.should eq 34
       x + 1
     end
+    Try.try{10/2}.map{|x| x + 10}.get.should eq 15
   end
 
   it "works as an applicative" do
