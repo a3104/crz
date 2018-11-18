@@ -62,7 +62,7 @@ module CRZ::Containers
     end
 
     def unwrap_or(default : A) : A
-      self.is_a?(Try::Success) ? self.value0 : default
+      self.is_a?(Try::Success) ? self.get : default
     end
 
     def unwrap_or_else(default : A) : A
